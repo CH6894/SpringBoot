@@ -81,7 +81,7 @@ public class BoardController {
 				// .transferTo : filePath에 이미지를 저장하겠다는 의미
 
 				// *경로를 별도의 변수에 저장
-				imgPath = "/home/git/upload/" + file_name; // DB에 저장될 주소
+				imgPath = "/uploads/" + file_name; // DB에 저장될 주소
 				// C:/upload 와는 다른 거임. 얘는 server 에 저장될 주소
 				// /uploads/는 DB에 저장될 주소를 이야기 하는 것
 			} catch (IllegalStateException e) {
