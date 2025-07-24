@@ -13,7 +13,7 @@
 <body>
 	<!-- Header -->
 	<!--thymeleaf 사용하여 header 넣는법 단, `header.html`이 템플릿 폴더 안에 있어야 합니다 -->
-	<div th:replace="/header::header"></div>
+	<div th:replace="header::header"></div>
 	<!-- div라는 태그를 thymeleaf를 이용해서 대체(replace)하겠다. header라는 fragment 로 -->
 
 	<main class="container my-4">
@@ -86,7 +86,7 @@
 	</main>
 
 	<!-- Footer -->
-	<div th:replace="/footer::footer "></div>
+	<div th:replace="footer::footer "></div>
 	<script>
 		function searchBoard(event) {
 			// form 구성 --> 제출 막기
