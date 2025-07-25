@@ -1,6 +1,5 @@
 package com.smhrd.board.controller;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -17,6 +16,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
+
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.CannedAccessControlList;
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.smhrd.board.config.BucketConfig;
 import com.smhrd.board.config.FileUploadConfig;
 import com.smhrd.board.entity.BoardEntity;
 import com.smhrd.board.entity.UserEntity;
@@ -30,11 +35,15 @@ import jakarta.servlet.http.HttpSession;
 public class BoardController {
 	@Autowired
 	BoardService boardService;
-
+	
 	private final FileUploadConfig fileUploadConfig;
+	private final BucketConfig bucketConfig;
+	private final AmazonS3 amazonS3;
 
-	BoardController(FileUploadConfig fileUploadConfig) {
+	BoardController(FileUploadConfig fileUploadConfig, BucketConfig bucketConfig, AmazonS3 amazonS3) {
 		this.fileUploadConfig = fileUploadConfig;
+		this.bucketConfig = bucketConfig;
+		this.amazonS3 = amazonS3;
 	}
 
 	// 글쓰기 기능
@@ -60,38 +69,22 @@ public class BoardController {
 			// 이미지가 이름은 같은데 안에 담긴 그림은 다를 수 있으니까, 랜덤값을 만들어줌
 			// java 안에 고유 번호를 만드는 객체가 존재함 -> UUID 객체
 			String file_name = UUID.randomUUID() + "_" + img_name;
-			// => random값_이미지이름, 예시) 123_1.jpg
-
-			// C:/upload 라는 폴더에 저장 할 예정
-			// --> 업로드할 경로를 변수로 가지고 오기
-//			FileUploadConfig config = new FileUploadConfig();
-//			String uploadDir = config.getUploaderDir();
-			String uploadDir = fileUploadConfig.getUploaderDir();
-			// uploadDir = C:/upload 랑 똑같은 말
-
-			// 저장될 때
-			// 예시) C:/upload/123_1.jpg
-			String filePath = Paths.get(uploadDir, file_name).toString();
-			// 이렇게 작성해준 이유 : uploadDir + file_name 으로 작성 시, OS에 따라 경로를 못잡을 수 있기 때문에 위처럼
-			// 작성("Paths.get" ~~)
-
-			// *파일 경로 확인 후 이미지 저장
+			// => random값_이미지이름, 예시) 123_1.jpg\
+			
 			try {
-				image.transferTo(new File(filePath));
-				// .transferTo : filePath에 이미지를 저장하겠다는 의미
+				ObjectMetadata metadata = new ObjectMetadata();
+		        metadata.setContentLength(image.getSize());
+		        metadata.setContentType(image.getContentType());
 
-				// *경로를 별도의 변수에 저장
-				imgPath = "/uploads/" + file_name; // DB에 저장될 주소
-				// C:/upload 와는 다른 거임. 얘는 server 에 저장될 주소
-				// /uploads/는 DB에 저장될 주소를 이야기 하는 것
-			} catch (IllegalStateException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
+		        PutObjectRequest request = new PutObjectRequest(bucketConfig.getbucketName(), file_name, image.getInputStream(), metadata)
+		                .withCannedAcl(CannedAccessControlList.PublicRead); // public 접근 허용
+
+		        amazonS3.putObject(request);
+		        imgPath = amazonS3.getUrl(bucketConfig.getbucketName(), file_name).toString();
+		        
+			}catch (Exception e) {
 				e.printStackTrace();
 			}
-
 		}
 
 		// DB 저장
