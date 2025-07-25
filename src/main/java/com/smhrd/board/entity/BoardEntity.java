@@ -39,7 +39,7 @@ public class BoardEntity {
 	// -> 이미지는 서버에 저장, 서버의 주소를 DB에 저장
 	
 	@Column(nullable = false, updatable = false) // DB에 저장 시, insert 는 가능하지만, update 는 불가능하게 설정
-	private LocalDate writeDay;
+	private LocalDate time;
 	
 	// 글 작성 시 자동으로 writeDay가 입력 되도록 코드 작성
 	// entity가 생성될 때 실행하는 코드
