@@ -45,7 +45,7 @@ public class BoardEntity {
 	// entity가 생성될 때 실행하는 코드
 	@PrePersist
 	protected void onCreate() {
-		this.writeDay = LocalDate.now();
+		this.time = LocalDate.now();
 	}
 	
 }
